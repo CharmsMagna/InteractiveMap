@@ -42,10 +42,37 @@
                     }
                 }).addTo(map);
 
-                // Add layer control to toggle categories
+                // Create an empty object to store category layers
+var categoryLayers = {};
+
+// Load GeoJSON data
+fetch('map_data.geojson')
+    .then(response => response.json())
+    .then(data => {
+        L.geoJSON(data, {
+            onEachFeature: function (feature, layer) {
+                var props = feature.properties;
+                var popupContent = `<strong>${props.category}</strong><br>${props.summary}<br><a href="${props.link}" target="_blank">More info</a>`;
+                layer.bindPopup(popupContent);
+
+                // Add to category layers
+                if (!categoryLayers[props.category]) {
+                    categoryLayers[props.category] = L.layerGroup();
+                }
+                categoryLayers[props.category].addLayer(layer);
+            }
+        });
+
+                // Add all layers to the map **by default**
+                for (let category in categoryLayers) {
+                    categoryLayers[category].addTo(map);
+                }
+        
+                // Add layer control, ensuring layers are ticked by default
                 L.control.layers(null, categoryLayers, { collapsed: false }).addTo(map);
             })
             .catch(error => console.error('Error loading GeoJSON:', error));
+
     </script>
 </body>
 </html>
