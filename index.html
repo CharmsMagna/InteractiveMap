@@ -24,8 +24,10 @@
         // Create an empty object to store category layers
         var categoryLayers = {};
 
+        var bounds = L.latLngBounds(); // Create an empty bounds object
+        
         // Load GeoJSON data
-        fetch('map_data.geojson')  // Ensure the file is in the same directory
+        fetch('map_data.geojson')
             .then(response => response.json())
             .then(data => {
                 L.geoJSON(data, {
@@ -33,26 +35,33 @@
                         var props = feature.properties;
                         var popupContent = `<strong>${props.category}</strong><br>${props.summary}<br><a href="${props.link}" target="_blank">More info</a>`;
                         layer.bindPopup(popupContent);
-
-                        // Add to category layers
+        
                         if (!categoryLayers[props.category]) {
                             categoryLayers[props.category] = L.layerGroup();
                         }
                         categoryLayers[props.category].addLayer(layer);
+        
+                        // Extend bounds to include this feature's coordinates
+                        bounds.extend(layer.getLatLng());
                     }
                 });
-
-                // Add all layers to the map **AND** register them in the control
+        
                 var overlayMaps = {};
                 for (let category in categoryLayers) {
-                    categoryLayers[category].addTo(map); // Add to the map
-                    overlayMaps[category] = categoryLayers[category]; // Add to control
+                    categoryLayers[category].addTo(map);
+                    overlayMaps[category] = categoryLayers[category];
                 }
-
-                // Add layer control, ensuring layers appear ticked by default
+        
                 L.control.layers(null, overlayMaps, { collapsed: false }).addTo(map);
+        
+                // **Fit the map to show all pins**
+                map.fitBounds(bounds, { padding: [50, 50] });
+        
+                // **Set max bounds to prevent zooming out too far**
+                map.setMaxBounds(bounds.pad(0.5)); // Optional: Add padding to avoid edge clipping
             })
             .catch(error => console.error('Error loading GeoJSON:', error));
+
     </script>
 </body>
 </html>
