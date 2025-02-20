@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+    <h2>Interactive Map with Categories</h2>
+    <div id="map" style="height: 600px;"></div>
+
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([20, 0], 2); // Centered globally
+
+        // Add a base layer (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Load GeoJSON data
+        fetch('map_data.geojson')  // Make sure this file is in the same directory
+            .then(response => response.json())
+            .then(data => {
+                // Create a layer group for categories
+                var categoryLayers = {};
+
+                // Process each feature in GeoJSON
+                L.geoJSON(data, {
+                    onEachFeature: function (feature, layer) {
+                        var props = feature.properties;
+                        var popupContent = `<strong>${props.category}</strong><br>${props.summary}<br><a href="${props.link}" target="_blank">More info</a>`;
+                        layer.bindPopup(popupContent);
+
+                        // Add to category layers
+                        if (!categoryLayers[props.category]) {
+                            categoryLayers[props.category] = L.layerGroup();
+                        }
+                        categoryLayers[props.category].addLayer(layer);
+                    }
+                }).addTo(map);
+
+                // Add layer control to toggle categories
+                L.control.layers(null, categoryLayers, { collapsed: false }).addTo(map);
+            })
+            .catch(error => console.error('Error loading GeoJSON:', error));
+    </script>
+</body>
+</html>
