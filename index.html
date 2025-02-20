@@ -24,7 +24,7 @@
         var categoryLayers = {};
 
         // Load GeoJSON data
-        fetch('map_data.geojson')  // Make sure this file is in the same directory
+        fetch('map_data.geojson')  // Ensure the file is in the same directory
             .then(response => response.json())
             .then(data => {
                 L.geoJSON(data, {
@@ -41,13 +41,15 @@
                     }
                 });
 
-                // Add all layers to the map **by default**
+                // Add all layers to the map **AND** register them in the control
+                var overlayMaps = {};
                 for (let category in categoryLayers) {
-                    categoryLayers[category].addTo(map);
+                    categoryLayers[category].addTo(map); // Add to the map
+                    overlayMaps[category] = categoryLayers[category]; // Add to control
                 }
 
-                // Add layer control, ensuring layers are ticked by default
-                L.control.layers(null, categoryLayers, { collapsed: false }).addTo(map);
+                // Add layer control, ensuring layers appear ticked by default
+                L.control.layers(null, overlayMaps, { collapsed: false }).addTo(map);
             })
             .catch(error => console.error('Error loading GeoJSON:', error));
     </script>
